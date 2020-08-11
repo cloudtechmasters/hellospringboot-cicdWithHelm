@@ -1,141 +1,62 @@
-### Hello 
-Example project deploying a Spring Boot applications to AWS EKS
+## Hello Springboot deployment using CICD Pipeline with helm
 
-## Prerequisities 
-* Java 8 / maven etc
-* Docker 
-* Kubectl 
-* [helm](https://github.com/helm/helm)
+## Pre-requisites:
+    - Install Java
+    - Install Git
+    - Install Maven
+    - Install Docker
+    - Install Jenkins
+    - Install Helm
+    - EKS Cluster
+## Install Java:
+    yum install java-1.8.0-openjdk-devel -y
+## Install Git:
+    yum install git -y
+## Install Apache-Maven:
+    wget https://mirrors.estointernet.in/apache/maven/maven-3/3.6.3/binaries/apache-maven-3.6.3-bin.tar.gz
+    tar xvzf apache-maven-3.6.3-bin.tar.gz
+    
+    vi /etc/profile.d/maven.sh
+    --------------------------------------------
+    export MAVEN_HOME=/opt/apache-maven-3.6.3
+    export PATH=$PATH:$MAVEN_HOME/bin
+    --------------------------------------------
+    
+    source /etc/profile.d/maven.sh
+    mvn -version
+## Install Jenkins
+    sudo wget -O /etc/yum.repos.d/jenkins.repo http://pkg.jenkins.io/redhat-stable/jenkins.repo
+    sudo rpm --import http://pkg.jenkins.io/redhat-stable/jenkins.io.key
+    sudo yum install jenkins
+    service jenkins start
+## Install Docker:
+    yum install docker -y
+    service docker start
+    usermod -aG docker jenkins
+## Jnekins Restart
+    service jenkins restart
+## Install helm
+    curl -fsSL -o get_helm.sh https://raw.githubusercontent.com/helm/helm/master/scripts/get-helm-3
+    chmod 700 get_helm.sh
+    ./get_helm.sh
+## Goto Jenkins and add plugins
+    jenkins --> Manage Jenkins --> Available
+    - CloudBees AWS Credentials
+    - Kubernetes Credentials
+    - Kubernetes Continuous Deploy
+## Create Credentials
+    - docker credentials
+             credentialsId: 'docker_credentials',  username: 'username', password: 'password')
+    - kubernetes config credentials
+## Create Github webhook
+![image](https://user-images.githubusercontent.com/68885738/89870155-0ebbea00-dbd3-11ea-837a-12c02c2c6037.png)
+![image](https://user-images.githubusercontent.com/68885738/89870125-0368be80-dbd3-11ea-9439-7f7e83b7c2fc.png)
 
-## Set-up  
-* Created application via start.spring.io (Web, DevTools) 
-* Added Hello Rest Controller 
-* Run locally 
-```
-mvn spring-boot:run
-``` 
+And one more step we need to do in Github
 
-## Add Docker 
-* Added __dockerfile-maven-plugin__ and __maven-dependency-plugin__ to pom file
-* Created docker file
-* build 
-```
-mvn install
-```
-* checked BOOT-INF AND META-INF now exsit under target/dependency/
-* build docker container 
-```
- docker build -t spjenk/hello .
-```
-* run docker container 
-```
-docker container run --name hello -p 8080:8080 -d spjenk/hello
-curl http://localhost:8080/hello
-```
-* push to dockerhub
-```
-docker push spjenk/hello:latest
-```
+![image](https://user-images.githubusercontent.com/68885738/89870357-5773a300-dbd3-11ea-9ae2-ea830f415967.png)
 
-## Add Kubernetes 
-We are going to run Kubernetes locally first and deploy to EKS in the next step
-* Ensure Kubernetes is enabled in Docker (docker > settings > Kubernetes > Enable)
-* switch kube context to desktop mode
-```
-kubectl config use-context docker-for-desktop
-```
-* Create skaffold helm chart 
-```
-helm create chart
-```
-* Updated chart 'values' YAMl file with the following 
-```
-image:
-  repository: spjenk/hello
-  tag: latest
-  pullPolicy: IfNotPresent
-```
-```
-service:
-  type: LoadBalancer
-  port: 8080
-```
-* deploy
-```
-helm install --name hello chart
-```
-* get the external ip address (may take a minute)
-```
-kubectl get svc
-```
-* check the pods are running (number should match replicas value in values.yaml)
-```
-kubectl get pods
-```
-* Remove the application once finished testing (e.g. localhosst:8080/hello)
-```
-helm delete --purge hello
-```
+## Add JenkinsFile Content inside pipeline section
+![image](https://user-images.githubusercontent.com/68885738/89870517-94d83080-dbd3-11ea-8643-ab84074737f8.png)
 
-## Deploy to AWS EKS
-
-Now we will deploy the application to the cloud. 
-Use the templates in tutorial [EKS getting started](https://docs.aws.amazon.com/eks/latest/userguide/getting-started.html) to create a VPC for our EKS application. We will need the following details to continue: 
-```
-Security Group: sg-xxxx
-VpcId: vpc-xxxx
-SubnetIds: subnet-xxx1, subnet-xxx2, subnet-xxx3
-```
-Create the EKS Cluster using the values above 
-```
-aws eks --region ap-southeast-2 create-cluster --name dev --role-arn arn:aws:iam::xxx:role/eksServiceRole --resources-vpc-config subnetIds=subnet-xxx,subnet-xxx,subnet-xxx,securityGroupIds=sg-xxx
-```
-Once the Cluster is active, add it the the kubeconfig
-```
-aws eks update-kubeconfig --name dev
-```
-Check the new cluster is now set as the default
-```
->kubectl config get-contexts
-CURRENT   NAME                                                  CLUSTER                                               AUTHINFO                                              NAMESPACE
-*         arn:aws:eks:ap-southeast-2:xxx:cluster/dev   arn:aws:eks:ap-southeast-2:xxx:cluster/dev   arn:aws:eks:ap-southeast-2:xxx:cluster/dev
-          docker-for-desktop
-```
-Create worker nodes (refer to EKS getting started) from cloud formation template
-
-https://amazon-eks.s3-us-west-2.amazonaws.com/cloudformation/2019-01-09/amazon-eks-nodegroup.yaml
-
-Join worker nodes to the cluster (note: update role arn with output from cloud formation creation above)
-```
-kubectl apply -f aws-auth-cm.yaml
-```
-Wait until the nodes are ready
-```
-kubectl get nodes
-```
-Install helm 
-```
-kubectl -n kube-system create sa tiller
-kubectl create clusterrolebinding tiller --clusterrole cluster-admin --serviceaccount=kube-system:tiller
-helm init --service-account tiller
-```
-
-Deploy
-```
-helm install --name hello chart
-```
-
-Find the external url
-```
-kubectl get svc -o wide
-```
-
-## Cost saving tips 
-* Scale horizontally (i.e. use small instance sizes) 
-* If you know the application will not be used at certain times (e.g. outside working hours) then update the auto scaling group for the worker nodes to min: 0, desired: 0 during those times
-
-
-## References  
-[create-your-first-helm-chart](https://docs.bitnami.com/kubernetes/how-to/create-your-first-helm-chart/)
-
-[EKS getting started](https://docs.aws.amazon.com/eks/latest/userguide/getting-started.html)
+Now we can try by change anything inside Github
