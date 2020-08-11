@@ -63,3 +63,7 @@ And one more step we need to do in Github
 ![image](https://user-images.githubusercontent.com/68885738/89870517-94d83080-dbd3-11ea-8643-ab84074737f8.png)
 
 Now we can try by change anything inside Github
+
+## Check output of application --> <loadbalancer>:8080/hello
+    
+        http://a66329da6d1804b61bdf5318a40ce772-1936783521.us-east-1.elb.amazonaws.com:8080/hello
