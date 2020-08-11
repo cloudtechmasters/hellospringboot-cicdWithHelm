@@ -8,7 +8,7 @@ image:
   repository: naresh240/hellospringboot
   pullPolicy: IfNotPresent
   # Overrides the image tag whose default is the chart appVersion.
-  tag: v1
+  tag: "{{ BUILD_NUMBER }}"
 
 imagePullSecrets: []
 nameOverride: ""
