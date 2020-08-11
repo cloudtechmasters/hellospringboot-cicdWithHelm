@@ -1,0 +1,50 @@
+pipeline{
+    agent any
+    tools{
+        maven 'maven3'
+    }
+    stages{
+        stage("SCM"){
+            steps{
+                git 'https://github.com/cloudtechmasters/hellospringboot-cicdWithHelm.git'
+            }
+        }
+        stage("Build Artifact"){
+            steps{
+                sh "mvn clean package"
+            }
+        }
+        stage("Docker Image"){
+            steps{
+                sh "docker build -t naresh240/hellospringboot:${BUILD_NUMBER} ."
+            }
+        }
+        stage("Docker Push"){
+            steps{
+                withCredentials([usernamePassword(credentialsId: 'docker_credentials', passwordVariable: 'password', usernameVariable: 'username')]) {
+                    sh "docker login -u ${username} -p ${password}"
+                }
+                sh "docker push naresh240/hellospringboot:${BUILD_NUMBER}"
+            }
+        }
+        stage("Deploy"){
+            steps{
+                withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', accessKeyVariable: 'AWS_ACCESS_KEY_ID', credentialsId: 'aws_configure', secretKeyVariable: 'AWS_SECRET_ACCESS_KEY']]) {
+                    withCredentials([kubeconfigFile(credentialsId: 'kube_config', variable: 'KUBECONFIG')]) {
+                    sh "helm upgrade --install springboot springboot --set image.tag=${BUILD_NUMBER}"
+                    sh "sleep 30"
+                    }
+                }
+            }
+        }
+        stage("Running Pods"){
+            steps{
+                withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', accessKeyVariable: 'AWS_ACCESS_KEY_ID', credentialsId: 'aws_configure', secretKeyVariable: 'AWS_SECRET_ACCESS_KEY']]) {
+                    withCredentials([kubeconfigFile(credentialsId: 'kube_config', variable: 'KUBECONFIG')]) {
+                        sh "kubectl get pods"
+                    }
+                }
+            }
+        }
+    }
+}
