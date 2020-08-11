@@ -1,0 +1,4 @@
+-------------------------------------------------------------------------------
+Test set: com.spjenk.hello.HelloApplicationTests
+-------------------------------------------------------------------------------
+Tests run: 1, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 3.248 s - in com.spjenk.hello.HelloApplicationTests
