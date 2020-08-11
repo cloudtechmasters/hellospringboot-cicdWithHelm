@@ -1,5 +1,5 @@
 ### Hello 
-Example project deploying a Spring Boot applications to AWS EKS 
+Example project deploying a Spring Boot applications to AWS EKS. 
 
 ## Prerequisities 
 * Java 8 / maven etc
