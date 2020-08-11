@@ -16,7 +16,7 @@ pipeline{
         }
         stage("Docker Image"){
             steps{
-                sh "docker build -t naresh240/hellospringboot:${BUILD_NUMBER} ."
+                sh "docker build -t cloudtechmasters/hellospringboot:${BUILD_NUMBER} ."
             }
         }
         stage("Docker Push"){
@@ -24,7 +24,7 @@ pipeline{
                 withCredentials([usernamePassword(credentialsId: 'docker_credentials', passwordVariable: 'password', usernameVariable: 'username')]) {
                     sh "docker login -u ${username} -p ${password}"
                 }
-                sh "docker push naresh240/hellospringboot:${BUILD_NUMBER}"
+                sh "docker push cloudtechmasters/hellospringboot:${BUILD_NUMBER}"
             }
         }
         stage("Deploy"){
@@ -37,11 +37,12 @@ pipeline{
                 }
             }
         }
-        stage("Running Pods"){
+        stage("Check Pods & Services"){
             steps{
                 withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', accessKeyVariable: 'AWS_ACCESS_KEY_ID', credentialsId: 'aws_configure', secretKeyVariable: 'AWS_SECRET_ACCESS_KEY']]) {
                     withCredentials([kubeconfigFile(credentialsId: 'kube_config', variable: 'KUBECONFIG')]) {
                         sh "kubectl get pods"
+                        sh "kubectl get services"
                     }
                 }
             }
