@@ -46,8 +46,11 @@
     - Kubernetes Continuous Deploy
 ## Create Credentials
     - docker credentials
-             credentialsId: 'docker_credentials',  username: 'username', password: 'password')
+             (credentialsId: 'docker_credentials',  username: 'username', password: 'password')
     - kubernetes config credentials
+             (credentialsId: 'kube_config', variable: 'KUBECONFIG')
+    - aws configure credentials
+             (accessKeyVariable: 'AWS_ACCESS_KEY_ID', credentialsId: 'aws_configure', secretKeyVariable: 'AWS_SECRET_ACCESS_KEY')
 ## Create Github webhook
 ![image](https://user-images.githubusercontent.com/68885738/89870155-0ebbea00-dbd3-11ea-837a-12c02c2c6037.png)
 ![image](https://user-images.githubusercontent.com/68885738/89870125-0368be80-dbd3-11ea-9439-7f7e83b7c2fc.png)
