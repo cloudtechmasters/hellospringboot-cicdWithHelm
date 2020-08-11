@@ -31,7 +31,7 @@ pipeline{
             steps{
                 withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', accessKeyVariable: 'AWS_ACCESS_KEY_ID', credentialsId: 'aws_configure', secretKeyVariable: 'AWS_SECRET_ACCESS_KEY']]) {
                     withCredentials([kubeconfigFile(credentialsId: 'kube_config', variable: 'KUBECONFIG')]) {
-                    sh "helm upgrade --install springboot springboot --set image.tag=${BUILD_NUMBER}"
+                    sh "helm upgrade --install springboot chart-eks-springboot --set image.tag=${BUILD_NUMBER}"
                     sh "sleep 30"
                     }
                 }
