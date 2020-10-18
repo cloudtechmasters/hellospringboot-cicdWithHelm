@@ -35,6 +35,9 @@
     usermod -aG docker jenkins
 ## Jnekins Restart
     service jenkins restart
+# Provide sudo permissions for jenkins user
+    vi /etc/sudoers
+  ![image](https://user-images.githubusercontent.com/58024415/96357945-9a944a00-111f-11eb-8a33-e4d1980c4609.png)
 ## Install helm
     curl -fsSL -o get_helm.sh https://raw.githubusercontent.com/helm/helm/master/scripts/get-helm-3
     chmod 700 get_helm.sh
